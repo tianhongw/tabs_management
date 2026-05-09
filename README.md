@@ -4,7 +4,7 @@ Tab Management is a lightweight Chrome extension for managing tabs that are alre
 
 ## Screenshot
 
-![Tab Management popup filtering GitHub tabs by domain](assets/plugin-screenshot.png)
+<img src="assets/plugin-screenshot.png" alt="Tab Management popup showing tabs grouped by domain" width="430">
 
 ## Features
 
