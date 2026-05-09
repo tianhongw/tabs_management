@@ -2,6 +2,10 @@
 
 Tab Management is a small Chrome extension MVP for managing tabs that are already open. The first version stays intentionally compact: fast search, tab switching, closing, pinning, muting, and one-click duplicate cleanup.
 
+## Screenshot
+
+![Tab Management plugin popup](assets/plugin-screenshot.png)
+
 ## MVP Scope
 
 - List all open tabs grouped by Chrome window.
