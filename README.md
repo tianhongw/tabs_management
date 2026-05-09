@@ -1,12 +1,12 @@
 # Tab Management
 
-Tab Management is a small Chrome extension MVP for managing tabs that are already open. The first version stays intentionally compact: fast search, tab switching, closing, pinning, muting, and one-click duplicate cleanup.
+Tab Management is a lightweight Chrome extension for managing tabs that are already open. It keeps the popup compact while covering the everyday tab actions: search, switch, close, pin, mute, and clean up duplicates.
 
 ## Screenshot
 
 ![Tab Management plugin popup](assets/plugin-screenshot.png)
 
-## MVP Scope
+## Features
 
 - List all open tabs grouped by Chrome window.
 - Refresh the tab list manually from the popup.
@@ -21,13 +21,22 @@ Tab Management is a small Chrome extension MVP for managing tabs that are alread
 - Treat `chrome://newtab/` tabs as duplicates; exclude other Chrome internal pages and extension pages.
 - Toggle between all windows and the current window when multiple Chrome windows are open; disable that control when only one window is open.
 
-## Run Locally
+## Install From GitHub
 
-1. Open `chrome://extensions`.
-2. Turn on **Developer mode**.
-3. Click **Load unpacked**.
-4. Select this folder: `/Users/tianhongw/codes/tabs_manage`.
-5. Click the Tab Management icon in the Chrome toolbar.
+This extension is currently meant to be loaded as an unpacked Chrome extension.
+
+1. Clone this repository:
+
+   ```bash
+   git clone https://github.com/tianhongw/tabs_management.git
+   cd tabs_management
+   ```
+
+2. Open `chrome://extensions` in Chrome.
+3. Turn on **Developer mode**.
+4. Click **Load unpacked**.
+5. Select the cloned repository folder.
+6. Click the Tab Management icon in the Chrome toolbar.
 
 ## Files
 
@@ -37,7 +46,7 @@ Tab Management is a small Chrome extension MVP for managing tabs that are alread
 - `popup.js` reads and updates Chrome tabs with the `chrome.tabs` and `chrome.windows` APIs.
 - `icons/` contains the extension icon source and generated PNG sizes.
 
-## Useful Next Iterations
+## Roadmap
 
 - Save and restore tab sessions.
 - Add keyboard navigation for search results.
