@@ -39,11 +39,14 @@
       <section id="tabsRoot" class="tabs-root" aria-live="polite"></section>
     </main>
 
-    <template id="windowTemplate">
-      <section class="window-group">
-        <div class="window-heading">
-          <h2></h2>
-          <span></span>
+    <template id="groupTemplate">
+      <section class="tab-group">
+        <div class="group-heading">
+          <div class="group-copy">
+            <h2></h2>
+            <span></span>
+          </div>
+          <button class="group-close-button" type="button">Close group</button>
         </div>
         <div class="tab-list"></div>
       </section>

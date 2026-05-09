@@ -83,7 +83,8 @@ h1 {
 
 .icon-button,
 .control-button,
-.mini-button {
+.mini-button,
+.group-close-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -99,7 +100,8 @@ h1 {
 
 .icon-button:hover,
 .control-button:hover,
-.mini-button:hover {
+.mini-button:hover,
+.group-close-button:hover {
   border-color: var(--line-strong);
   transform: translateY(-1px);
 }
@@ -117,6 +119,7 @@ h1 {
 .icon-button:focus-visible,
 .control-button:focus-visible,
 .mini-button:focus-visible,
+.group-close-button:focus-visible,
 .tab-main:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--amber);
@@ -167,8 +170,13 @@ input:focus-visible {
 
 .control-button {
   height: 36px;
+  min-width: 0;
+  padding: 0 8px;
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .control-button[aria-pressed="true"],
@@ -211,11 +219,11 @@ input:focus-visible {
   scrollbar-width: thin;
 }
 
-.window-group + .window-group {
+.tab-group + .tab-group {
   margin-top: 14px;
 }
 
-.window-heading {
+.group-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -224,13 +232,46 @@ input:focus-visible {
   padding: 0 1px;
 }
 
-.window-heading h2,
-.window-heading span {
+.group-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.group-heading h2,
+.group-heading span,
+.group-close-button {
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: 11px;
   line-height: 1.2;
   text-transform: uppercase;
+}
+
+.group-heading h2,
+.group-heading span {
   color: var(--muted);
+}
+
+.group-heading h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-close-button {
+  flex: none;
+  min-width: 0;
+  min-height: 26px;
+  padding: 0 8px;
+  color: var(--coral);
+  background: transparent;
+  box-shadow: none;
+}
+
+.group-close-button:hover {
+  border-color: #edb4aa;
+  background: var(--coral-soft);
 }
 
 .tab-list {

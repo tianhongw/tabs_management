@@ -14,7 +14,7 @@ const elements = {
   currentWindowButton: document.querySelector("#currentWindowButton"),
   duplicatesButton: document.querySelector("#duplicatesButton"),
   closeAllButton: document.querySelector("#closeAllButton"),
-  windowTemplate: document.querySelector("#windowTemplate"),
+  groupTemplate: document.querySelector("#groupTemplate"),
   tabTemplate: document.querySelector("#tabTemplate")
 };
 
@@ -83,6 +83,7 @@ async function loadTabs() {
 
 function render() {
   const windowCount = countWindows(state.tabs);
+  const domainCount = countDomains(state.tabs);
 
   if (windowCount <= 1) {
     state.showCurrentWindowOnly = false;
@@ -91,7 +92,7 @@ function render() {
   const visibleTabs = getVisibleTabs();
   const duplicateCount = getDuplicateGroups(state.tabs).reduce((sum, group) => sum + group.length - 1, 0);
 
-  elements.summary.textContent = `${formatCount(state.tabs.length, "tab")} / ${formatCount(windowCount, "window")}`;
+  elements.summary.textContent = `${formatCount(state.tabs.length, "tab")} / ${formatCount(windowCount, "window")} / ${formatCount(domainCount, "domain")}`;
   updateCurrentWindowButton(windowCount);
   elements.duplicatesButton.disabled = duplicateCount === 0;
   elements.duplicatesButton.textContent = duplicateCount ? `Duplicates ${duplicateCount}` : "No duplicates";
@@ -111,16 +112,19 @@ function render() {
     return;
   }
 
-  const groups = groupByWindow(visibleTabs);
+  const groups = groupByDomain(visibleTabs);
 
   groups.forEach(group => {
-    const groupNode = elements.windowTemplate.content.firstElementChild.cloneNode(true);
+    const groupNode = elements.groupTemplate.content.firstElementChild.cloneNode(true);
     const heading = groupNode.querySelector("h2");
     const count = groupNode.querySelector("span");
+    const closeGroupButton = groupNode.querySelector(".group-close-button");
     const list = groupNode.querySelector(".tab-list");
 
-    heading.textContent = group.windowId === state.currentWindowId ? "Current window" : `Window ${group.windowNumber}`;
-    count.textContent = formatCount(group.tabs.length, "tab");
+    heading.textContent = group.heading;
+    count.textContent = getGroupCountLabel(group.tabs);
+    closeGroupButton.title = `Close ${getGroupCountLabel(group.tabs)} from ${group.heading}`;
+    closeGroupButton.addEventListener("click", () => closeTabGroup(group));
 
     group.tabs.forEach(tab => {
       list.append(createTabRow(tab));
@@ -287,6 +291,26 @@ async function closeAllTabs() {
   }
 }
 
+async function closeTabGroup(group) {
+  const tabsToClose = [...group.tabs];
+
+  if (!tabsToClose.length) {
+    render();
+    return;
+  }
+
+  try {
+    await chrome.tabs.remove(tabsToClose.map(tab => tab.id));
+    const removedIds = new Set(tabsToClose.map(tab => tab.id));
+    state.tabs = state.tabs.filter(tab => !removedIds.has(tab.id));
+    setStatus(`Closed ${formatCount(tabsToClose.length, "tab")} from ${group.heading}.`);
+    render();
+  } catch (error) {
+    await loadTabs();
+    setStatus(`Could not close ${group.heading}: ${error.message}`, true);
+  }
+}
+
 function getVisibleTabs() {
   return state.tabs.filter(tab => {
     if (state.showCurrentWindowOnly && tab.windowId !== state.currentWindowId) {
@@ -302,23 +326,36 @@ function getVisibleTabs() {
   });
 }
 
-function groupByWindow(tabs) {
-  const windowIds = [...new Set(state.tabs.map(tab => tab.windowId))];
+function groupByDomain(tabs) {
   const groups = new Map();
 
   tabs.forEach(tab => {
-    if (!groups.has(tab.windowId)) {
-      groups.set(tab.windowId, []);
+    const domain = getDomainInfo(tab.url);
+
+    if (!groups.has(domain.key)) {
+      groups.set(domain.key, {
+        key: domain.key,
+        heading: domain.label,
+        sortLabel: domain.sortLabel,
+        tabs: []
+      });
     }
 
-    groups.get(tab.windowId).push(tab);
+    groups.get(domain.key).tabs.push(tab);
   });
 
-  return [...groups.entries()].map(([windowId, groupTabs]) => ({
-    windowId,
-    windowNumber: windowIds.indexOf(windowId) + 1,
-    tabs: groupTabs.sort(compareTabs)
-  }));
+  return [...groups.values()]
+    .map(group => ({
+      ...group,
+      tabs: group.tabs.sort(compareTabs)
+    }))
+    .sort((a, b) => a.sortLabel.localeCompare(b.sortLabel) || a.key.localeCompare(b.key));
+}
+
+function getGroupCountLabel(tabs) {
+  const tabCount = formatCount(tabs.length, "tab");
+  const windowCount = countWindows(tabs);
+  return windowCount > 1 ? `${tabCount} / ${formatCount(windowCount, "window")}` : tabCount;
 }
 
 function getDuplicateGroups(tabs) {
@@ -359,6 +396,66 @@ function compareTabs(a, b) {
 
 function countWindows(tabs) {
   return new Set(tabs.map(tab => tab.windowId)).size;
+}
+
+function countDomains(tabs) {
+  return new Set(tabs.map(tab => getDomainInfo(tab.url).key)).size;
+}
+
+function getDomainInfo(url) {
+  if (!url) {
+    return createDomainInfo("none", "No domain", "zzzz no domain");
+  }
+
+  if (isChromeNewTabUrl(url)) {
+    return createDomainInfo("chrome:newtab", "chrome://newtab", "chrome://newtab");
+  }
+
+  try {
+    const parsed = new URL(url);
+
+    if (parsed.protocol === "blob:") {
+      return getDomainInfo(parsed.pathname);
+    }
+
+    if (parsed.protocol === "chrome-extension:") {
+      return createDomainInfo("chrome-extension", "Extension pages", "zz chrome extension");
+    }
+
+    if (parsed.protocol === "chrome:") {
+      const page = parsed.hostname || parsed.pathname.replace(/^\/+/, "");
+      const label = page ? `chrome://${page}` : "Chrome pages";
+      return createDomainInfo(`chrome:${page || "pages"}`, label, label);
+    }
+
+    if (parsed.protocol === "file:") {
+      return createDomainInfo("file", "Local files", "zz local files");
+    }
+
+    if (parsed.hostname) {
+      const hostname = parsed.hostname.replace(/^www\./, "").toLowerCase();
+      return createDomainInfo(`host:${hostname}`, hostname, hostname);
+    }
+
+    if (parsed.protocol === "about:") {
+      const label = parsed.pathname ? `about:${parsed.pathname}` : "About pages";
+      return createDomainInfo(`about:${parsed.pathname || "pages"}`, label, label);
+    }
+
+    if (parsed.protocol === "data:") {
+      return createDomainInfo("data", "Data URL pages", "zz data urls");
+    }
+
+    const protocol = parsed.protocol.replace(/:$/, "");
+    const label = protocol ? `${protocol} pages` : "No domain";
+    return createDomainInfo(`protocol:${protocol || "none"}`, label, `zz ${label}`);
+  } catch {
+    return createDomainInfo("other", "Other pages", "zz other pages");
+  }
+}
+
+function createDomainInfo(key, label, sortLabel) {
+  return { key, label, sortLabel };
 }
 
 function normalizeUrl(url) {

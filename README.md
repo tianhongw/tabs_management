@@ -4,14 +4,15 @@ Tab Management is a lightweight Chrome extension for managing tabs that are alre
 
 ## Screenshot
 
-![Tab Management plugin popup](assets/plugin-screenshot.png)
+![Tab Management popup filtering GitHub tabs by domain](assets/plugin-screenshot.png)
 
 ## Features
 
-- List all open tabs grouped by Chrome window.
+- List all open tabs grouped by tab domain.
 - Refresh the tab list manually from the popup.
 - Search tabs by title or URL.
 - Press Enter in the search box to jump to the first match.
+- Close every tab in a domain group.
 - Click a tab to focus its window and switch to it.
 - Close individual tabs.
 - Close all open tabs across all Chrome windows.
@@ -44,11 +45,11 @@ This extension is currently meant to be loaded as an unpacked Chrome extension.
 - `popup.html` defines the popup structure.
 - `styles.css` handles the compact popup UI.
 - `popup.js` reads and updates Chrome tabs with the `chrome.tabs` and `chrome.windows` APIs.
+- `assets/` contains the README screenshot.
 - `icons/` contains the extension icon source and generated PNG sizes.
 
 ## Roadmap
 
 - Save and restore tab sessions.
 - Add keyboard navigation for search results.
-- Group tabs by domain.
 - Close all tabs matching the current search.
